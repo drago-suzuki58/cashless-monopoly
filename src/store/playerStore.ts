@@ -20,8 +20,7 @@ interface PlayerState {
     name: string,
     color: string,
     nextSeq: number,
-    bal: number,
-    hist?: [number, number, number, number][]
+    bal: number
   ) => void;
   addTransaction: (amount: number) => {
     seq: number;
@@ -53,43 +52,11 @@ export const usePlayerStore = create<PlayerState>()(
           history: [],
         });
       },
-      recoverProfile: (uuid, name, color, nextSeq, bal, hist) => {
-        const history: PlayerLog[] = [];
-        const undoneSeqs = new Set<number>();
-
-        if (hist) {
-          // First pass: identify all undone seqs
-          hist.forEach(([, typeNum, val]) => {
-            if (typeNum === 2) { // 2 means undo
-              undoneSeqs.add(val); // val is targetSeq
-            }
-          });
-
-          // Second pass: build the PlayerLog array
-          hist.forEach(([seq, typeNum, val, timestamp]) => {
-            if (typeNum === 1) { // 1 means tx
-              history.push({
-                seq,
-                type: "tx",
-                amount: val,
-                timestamp,
-                isUndone: undoneSeqs.has(seq),
-              });
-            } else if (typeNum === 2) { // 2 means undo
-              history.push({
-                seq,
-                type: "undo",
-                targetSeq: val,
-                timestamp,
-              });
-            }
-          });
-        }
-
+      recoverProfile: (uuid, name, color, nextSeq, bal) => {
         set({
           profile: { uuid, name, color, initialBalance: bal },
           currentSeq: nextSeq,
-          history, // Use reconstructed history
+          history: [], // clear history on recovery since we don't sync it anymore
         });
       },
       addTransaction: (amount) => {

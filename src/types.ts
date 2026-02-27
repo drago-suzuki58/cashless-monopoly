@@ -18,7 +18,6 @@ export interface SyncPayload extends BasePayload {
   col: string;
   seq: number;
   bal: number; // current balance
-  hist?: [number, number, number, number][]; // [seq, type(1=tx, 2=undo), value(amount or tgt), timestamp]
 }
 
 export interface TransactionPayload extends BasePayload {

@@ -68,7 +68,7 @@ export default function Player() {
       if (data.act === "sync") {
         usePlayerStore
           .getState()
-          .recoverProfile(data.uuid, data.name, data.col, data.seq, data.bal, data.hist);
+          .recoverProfile(data.uuid, data.name, data.col, data.seq, data.bal);
         playAudio("success");
         setToast({ message: "データを復元しました", type: "success", id: Date.now() });
         setIsScanningSync(false);
