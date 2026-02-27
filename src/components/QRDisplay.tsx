@@ -18,23 +18,23 @@ export function QRDisplay({
 }: QRDisplayProps) {
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-in fade-in zoom-in duration-200">
-      <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative flex flex-col">
+      <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative flex flex-col">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
+          className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors z-10"
         >
           <X size={24} />
         </button>
 
-        <div className="p-8 pb-6 flex flex-col items-center flex-1">
-          <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">
+        <div className="p-6 pb-6 flex flex-col items-center flex-1">
+          <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
             {title}
           </h2>
 
-          <div className="bg-white p-4 rounded-xl shadow-inner border-2 border-gray-100 mb-4">
+          <div className="bg-white p-2 rounded-xl shadow-inner border-2 border-gray-100 mb-4 w-full aspect-square flex items-center justify-center">
             <QRCodeSVG
               value={payload}
-              size={240}
+              className="w-full h-full"
               level="M"
               includeMargin={false}
             />
