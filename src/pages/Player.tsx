@@ -1,40 +1,53 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, History, RefreshCw, X, LogOut } from 'lucide-react';
-import { usePlayerStore } from '../store/playerStore';
-import { Keypad } from '../components/Keypad';
-import { QRDisplay } from '../components/QRDisplay';
-import { QRScanner } from '../components/QRScanner';
-import { cn } from '../utils/cn';
-import type { RegisterPayload, TransactionPayload, UndoPayload, SyncPayload } from '../types';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, History, RefreshCw, X, LogOut } from "lucide-react";
+import { usePlayerStore } from "../store/playerStore";
+import { Keypad } from "../components/Keypad";
+import { QRDisplay } from "../components/QRDisplay";
+import { QRScanner } from "../components/QRScanner";
+import { cn } from "../utils/cn";
+import type {
+  RegisterPayload,
+  TransactionPayload,
+  UndoPayload,
+  SyncPayload,
+} from "../types";
 
 const COLORS = [
-  { name: 'Red', hex: '#EF4444' },
-  { name: 'Blue', hex: '#3B82F6' },
-  { name: 'Green', hex: '#10B981' },
-  { name: 'Yellow', hex: '#F59E0B' },
-  { name: 'Purple', hex: '#8B5CF6' },
-  { name: 'Pink', hex: '#EC4899' },
+  { name: "Red", hex: "#EF4444" },
+  { name: "Blue", hex: "#3B82F6" },
+  { name: "Green", hex: "#10B981" },
+  { name: "Yellow", hex: "#F59E0B" },
+  { name: "Purple", hex: "#8B5CF6" },
+  { name: "Pink", hex: "#EC4899" },
 ];
 
 export default function Player() {
-  const { profile, setProfile, addTransaction, addUndo, history, reset } = usePlayerStore();
-  
-  const [name, setName] = useState('');
+  const { profile, setProfile, addTransaction, addUndo, history, reset } =
+    usePlayerStore();
+
+  const [name, setName] = useState("");
   const [color, setColor] = useState(COLORS[0].hex);
-  const [initialBalance, setInitialBalance] = useState('1500');
-  
-  const [qrPayload, setQrPayload] = useState<{ text: string, type: 'tx' | 'undo' | 'reg', commit?: () => void, rollback?: () => void } | null>(null);
-  const [qrTitle, setQrTitle] = useState('');
-  
+  const [initialBalance, setInitialBalance] = useState("1500");
+
+  const [qrPayload, setQrPayload] = useState<{
+    text: string;
+    type: "tx" | "undo" | "reg";
+    commit?: () => void;
+    rollback?: () => void;
+  } | null>(null);
+  const [qrTitle, setQrTitle] = useState("");
+
   const [showHistory, setShowHistory] = useState(false);
   const [isScanningSync, setIsScanningSync] = useState(false);
 
   const handleScanSync = (text: string) => {
     try {
       const data = JSON.parse(text) as SyncPayload;
-      if (data.act === 'sync') {
-        usePlayerStore.getState().recoverProfile(data.uuid, data.name, data.col, data.seq);
+      if (data.act === "sync") {
+        usePlayerStore
+          .getState()
+          .recoverProfile(data.uuid, data.name, data.col, data.seq);
         setIsScanningSync(false);
       }
     } catch {
@@ -47,18 +60,18 @@ export default function Player() {
     if (!name.trim()) return;
     const bal = parseInt(initialBalance, 10) || 1500;
     setProfile(name.trim(), color, bal);
-    
+
     // Fetch updated profile
     const currentProfile = usePlayerStore.getState().profile!;
     const payload: RegisterPayload = {
       uuid: currentProfile.uuid,
-      act: 'reg',
+      act: "reg",
       name: name.trim(),
       col: color,
       bal,
     };
-    setQrPayload({ text: JSON.stringify(payload), type: 'reg' });
-    setQrTitle('登録用QRコード');
+    setQrPayload({ text: JSON.stringify(payload), type: "reg" });
+    setQrTitle("登録用QRコード");
   };
 
   const showRegQR = () => {
@@ -70,11 +83,16 @@ export default function Player() {
     const { seq, commit, rollback } = addTransaction(-amount);
     const payload: TransactionPayload = {
       uuid: profile.uuid,
-      act: 'tx',
+      act: "tx",
       amt: -amount,
       seq,
     };
-    setQrPayload({ text: JSON.stringify(payload), type: 'tx', commit, rollback });
+    setQrPayload({
+      text: JSON.stringify(payload),
+      type: "tx",
+      commit,
+      rollback,
+    });
     setQrTitle(`M ${amount.toLocaleString()} 支払う`);
   };
 
@@ -83,11 +101,16 @@ export default function Player() {
     const { seq, commit, rollback } = addTransaction(amount);
     const payload: TransactionPayload = {
       uuid: profile.uuid,
-      act: 'tx',
+      act: "tx",
       amt: amount,
       seq,
     };
-    setQrPayload({ text: JSON.stringify(payload), type: 'tx', commit, rollback });
+    setQrPayload({
+      text: JSON.stringify(payload),
+      type: "tx",
+      commit,
+      rollback,
+    });
     setQrTitle(`M ${amount.toLocaleString()} 貰う`);
   };
 
@@ -96,11 +119,16 @@ export default function Player() {
     const { seq, commit, rollback } = addUndo(targetSeq);
     const payload: UndoPayload = {
       uuid: profile.uuid,
-      act: 'undo',
+      act: "undo",
       tgt: targetSeq,
       seq,
     };
-    setQrPayload({ text: JSON.stringify(payload), type: 'undo', commit, rollback });
+    setQrPayload({
+      text: JSON.stringify(payload),
+      type: "undo",
+      commit,
+      rollback,
+    });
     setQrTitle(`取引 (seq:${targetSeq}) を取消`);
     setShowHistory(false);
   };
@@ -111,7 +139,10 @@ export default function Player() {
       return (
         <div className="flex flex-col min-h-screen bg-gray-50 p-6">
           <header className="flex items-center mb-8">
-            <button onClick={() => setIsScanningSync(false)} className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors">
+            <button
+              onClick={() => setIsScanningSync(false)}
+              className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
+            >
               <ArrowLeft size={24} />
             </button>
             <h1 className="text-xl font-bold ml-2">銀行から復元</h1>
@@ -119,7 +150,9 @@ export default function Player() {
           <div className="flex-1 flex flex-col items-center">
             <QRScanner onScan={handleScanSync} isScanning={true} />
             <p className="mt-8 text-sm font-bold text-gray-500 text-center">
-              銀行の画面でプレイヤーパネルをタップし、<br/>復元用QRを表示して読み取ってください。
+              銀行の画面でプレイヤーパネルをタップし、
+              <br />
+              復元用QRを表示して読み取ってください。
             </p>
           </div>
         </div>
@@ -129,7 +162,10 @@ export default function Player() {
     return (
       <div className="flex flex-col min-h-screen bg-gray-50 p-6">
         <header className="flex items-center mb-8">
-          <Link to="/" className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors">
+          <Link
+            to="/"
+            className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
+          >
             <ArrowLeft size={24} />
           </Link>
           <h1 className="text-xl font-bold ml-2">プレイヤー登録</h1>
@@ -138,8 +174,8 @@ export default function Player() {
         <form onSubmit={handleRegister} className="flex-1 space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700">名前</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -149,16 +185,20 @@ export default function Player() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700">テーマカラー</label>
+            <label className="text-sm font-bold text-gray-700">
+              テーマカラー
+            </label>
             <div className="flex flex-wrap gap-4">
-              {COLORS.map(c => (
+              {COLORS.map((c) => (
                 <button
                   key={c.hex}
                   type="button"
                   onClick={() => setColor(c.hex)}
                   className={cn(
                     "w-12 h-12 rounded-full border-4 transition-transform",
-                    color === c.hex ? "border-gray-800 scale-110" : "border-transparent hover:scale-105"
+                    color === c.hex
+                      ? "border-gray-800 scale-110"
+                      : "border-transparent hover:scale-105",
                   )}
                   style={{ backgroundColor: c.hex }}
                 />
@@ -167,9 +207,11 @@ export default function Player() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700">初期残高 (M)</label>
-            <input 
-              type="number" 
+            <label className="text-sm font-bold text-gray-700">
+              初期残高 (M)
+            </label>
+            <input
+              type="number"
               required
               value={initialBalance}
               onChange={(e) => setInitialBalance(e.target.value)}
@@ -177,7 +219,7 @@ export default function Player() {
             />
           </div>
 
-          <button 
+          <button
             type="submit"
             className="w-full mt-8 bg-gray-900 text-white font-bold py-4 rounded-xl shadow hover:bg-gray-800 active:scale-95 transition-all"
           >
@@ -189,11 +231,13 @@ export default function Player() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-gray-50 px-4 text-sm text-gray-500 font-medium">または</span>
+              <span className="bg-gray-50 px-4 text-sm text-gray-500 font-medium">
+                または
+              </span>
             </div>
           </div>
 
-          <button 
+          <button
             type="button"
             onClick={() => setIsScanningSync(true)}
             className="w-full bg-white border-2 border-gray-200 text-gray-700 font-bold py-4 rounded-xl shadow-sm hover:bg-gray-100 active:scale-95 transition-all"
@@ -210,7 +254,10 @@ export default function Player() {
     return (
       <div className="flex flex-col min-h-screen bg-gray-50 p-6 z-50 absolute inset-0">
         <header className="flex items-center mb-8">
-          <button onClick={() => setIsScanningSync(false)} className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors">
+          <button
+            onClick={() => setIsScanningSync(false)}
+            className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
+          >
             <ArrowLeft size={24} />
           </button>
           <h1 className="text-xl font-bold ml-2">銀行から復元</h1>
@@ -218,7 +265,9 @@ export default function Player() {
         <div className="flex-1 flex flex-col items-center">
           <QRScanner onScan={handleScanSync} isScanning={true} />
           <p className="mt-8 text-sm font-bold text-gray-500 text-center">
-            銀行の画面でプレイヤーパネルをタップし、<br/>復元用QRを表示して読み取ってください。
+            銀行の画面でプレイヤーパネルをタップし、
+            <br />
+            復元用QRを表示して読み取ってください。
           </p>
         </div>
       </div>
@@ -228,33 +277,42 @@ export default function Player() {
   return (
     <div className="flex flex-col h-screen bg-gray-50 max-h-screen overflow-hidden relative">
       <header className="flex items-center p-4 bg-white shadow-sm border-b border-gray-100 z-10 shrink-0">
-        <Link to="/" className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors">
+        <Link
+          to="/"
+          className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
+        >
           <ArrowLeft size={24} />
         </Link>
         <div className="ml-2 flex items-center flex-1">
-          <div 
-            className="w-4 h-4 rounded-full mr-2 shadow-inner" 
-            style={{ backgroundColor: profile.color }} 
+          <div
+            className="w-4 h-4 rounded-full mr-2 shadow-inner"
+            style={{ backgroundColor: profile.color }}
           />
-          <span className="font-bold text-gray-800 truncate">{profile.name}</span>
+          <span className="font-bold text-gray-800 truncate">
+            {profile.name}
+          </span>
         </div>
-        <button 
+        <button
           onClick={showRegQR}
           className="p-2 text-indigo-600 bg-indigo-50 rounded-full mr-2 hover:bg-indigo-100 transition-colors"
           title="銀行からデータを復元"
         >
           <RefreshCw size={20} />
         </button>
-        <button 
+        <button
           onClick={() => setShowHistory(true)}
           className="p-2 text-gray-600 bg-gray-100 rounded-full mr-2 hover:bg-gray-200 transition-colors"
           title="履歴を表示"
         >
           <History size={20} />
         </button>
-        <button 
+        <button
           onClick={() => {
-            if (window.confirm('プレイヤーデータをリセットして最初からやり直しますか？')) {
+            if (
+              window.confirm(
+                "プレイヤーデータをリセットして最初からやり直しますか？",
+              )
+            ) {
               reset();
             }
           }}
@@ -264,17 +322,17 @@ export default function Player() {
           <LogOut size={20} />
         </button>
       </header>
-      
+
       <main className="flex-1 flex flex-col pt-4 bg-gray-50 relative min-h-0">
         <Keypad onPay={handlePay} onReceive={handleReceive} />
       </main>
 
       {/* QR Code Modal */}
       {qrPayload && (
-        <QRDisplay 
-          payload={qrPayload.text} 
-          title={qrTitle} 
-          isConfirmable={qrPayload.type !== 'reg'} // Registration usually isn't strict about history
+        <QRDisplay
+          payload={qrPayload.text}
+          title={qrTitle}
+          isConfirmable={qrPayload.type !== "reg"} // Registration usually isn't strict about history
           onClose={() => {
             if (qrPayload.rollback) qrPayload.rollback();
             setQrPayload(null);
@@ -291,26 +349,40 @@ export default function Player() {
         <div className="absolute inset-0 z-40 flex flex-col bg-gray-50 animate-in slide-in-from-bottom-full duration-300">
           <header className="flex items-center justify-between p-4 bg-white shadow-sm shrink-0">
             <h2 className="text-xl font-bold text-gray-800">取引履歴</h2>
-            <button onClick={() => setShowHistory(false)} className="p-2 text-gray-500 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+            <button
+              onClick={() => setShowHistory(false)}
+              className="p-2 text-gray-500 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+            >
               <X size={24} />
             </button>
           </header>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {history.length === 0 ? (
-              <p className="text-center text-gray-400 mt-10">履歴がありません</p>
+              <p className="text-center text-gray-400 mt-10">
+                履歴がありません
+              </p>
             ) : (
               history.map((log) => (
-                <div key={log.seq} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div
+                  key={log.seq}
+                  className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between"
+                >
                   <div>
                     <div className="text-xs text-gray-400 mb-1">
-                      {new Date(log.timestamp).toLocaleTimeString()} · seq:{log.seq}
+                      {new Date(log.timestamp).toLocaleTimeString()} · seq:
+                      {log.seq}
                     </div>
-                    {log.type === 'tx' ? (
-                      <div className={cn(
-                        "font-bold text-lg",
-                        (log.amount || 0) > 0 ? "text-emerald-500" : "text-rose-500"
-                      )}>
-                        {log.amount! > 0 ? '+' : ''}{log.amount} M
+                    {log.type === "tx" ? (
+                      <div
+                        className={cn(
+                          "font-bold text-lg",
+                          (log.amount || 0) > 0
+                            ? "text-emerald-500"
+                            : "text-rose-500",
+                        )}
+                      >
+                        {log.amount! > 0 ? "+" : ""}
+                        {log.amount} M
                       </div>
                     ) : (
                       <div className="text-gray-500 font-medium">
@@ -318,8 +390,8 @@ export default function Player() {
                       </div>
                     )}
                   </div>
-                  {log.type === 'tx' && !log.isUndone && (
-                    <button 
+                  {log.type === "tx" && !log.isUndone && (
+                    <button
                       onClick={() => handleUndo(log.seq)}
                       className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-200 active:scale-95 transition-all"
                     >

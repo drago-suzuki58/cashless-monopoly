@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { useEffect, useRef } from "react";
+import { Html5Qrcode } from "html5-qrcode";
 
 interface QRScannerProps {
   onScan: (decodedText: string) => void;
@@ -38,7 +38,7 @@ export function QRScanner({ onScan, isScanning }: QRScannerProps) {
             },
             () => {
               // Ignore scan failures (happens on every frame without a QR)
-            }
+            },
           );
         }
       } catch (err) {

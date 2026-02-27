@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
-import type { PlayerLog } from '../types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { v4 as uuidv4 } from "uuid";
+import type { PlayerLog } from "../types";
 
 export interface PlayerProfile {
   uuid: string;
@@ -15,9 +15,22 @@ interface PlayerState {
   currentSeq: number;
   history: PlayerLog[];
   setProfile: (name: string, color: string, initialBalance: number) => void;
-  recoverProfile: (uuid: string, name: string, color: string, nextSeq: number) => void;
-  addTransaction: (amount: number) => { seq: number, commit: () => void, rollback: () => void };
-  addUndo: (targetSeq: number) => { seq: number, commit: () => void, rollback: () => void };
+  recoverProfile: (
+    uuid: string,
+    name: string,
+    color: string,
+    nextSeq: number,
+  ) => void;
+  addTransaction: (amount: number) => {
+    seq: number;
+    commit: () => void;
+    rollback: () => void;
+  };
+  addUndo: (targetSeq: number) => {
+    seq: number;
+    commit: () => void;
+    rollback: () => void;
+  };
   reset: () => void;
 }
 
@@ -30,25 +43,25 @@ export const usePlayerStore = create<PlayerState>()(
       setProfile: (name, color, initialBalance) => {
         const uuid = get().profile?.uuid || uuidv4();
         const newProfile = { uuid, name, color, initialBalance };
-        set({ 
+        set({
           profile: newProfile,
           // When re-registering, do we reset history and seq?
           // It's probably better to keep history but maybe add a register log.
           currentSeq: 1,
-          history: [] 
+          history: [],
         });
       },
       recoverProfile: (uuid, name, color, nextSeq) => {
         set({
           profile: { uuid, name, color, initialBalance: 0 },
           currentSeq: nextSeq,
-          history: [] // clear history on recovery since we don't sync it
+          history: [], // clear history on recovery since we don't sync it
         });
       },
       addTransaction: (amount) => {
         const { currentSeq } = get();
         const seq = currentSeq;
-        
+
         // We increment the seq immediately to ensure uniqueness even if canceled (safe)
         // But we don't add to history until committed
         set({ currentSeq: seq + 1 });
@@ -59,21 +72,21 @@ export const usePlayerStore = create<PlayerState>()(
             const log: PlayerLog = {
               seq,
               timestamp: Date.now(),
-              type: 'tx',
+              type: "tx",
               amount,
             };
             set((state) => ({ history: [log, ...state.history] }));
           },
           rollback: () => {
-             // In a perfect world we might decrement seq, but it's safer to just skip it
-             // so we don't accidentally reuse a sequence number if there was a race condition
-          }
+            // In a perfect world we might decrement seq, but it's safer to just skip it
+            // so we don't accidentally reuse a sequence number if there was a race condition
+          },
         };
       },
       addUndo: (targetSeq) => {
         const { currentSeq } = get();
         const seq = currentSeq;
-        
+
         set({ currentSeq: seq + 1 });
 
         return {
@@ -82,23 +95,25 @@ export const usePlayerStore = create<PlayerState>()(
             const log: PlayerLog = {
               seq,
               timestamp: Date.now(),
-              type: 'undo',
+              type: "undo",
               targetSeq,
             };
             set((state) => ({
               history: [
-                log, 
-                ...state.history.map((h) => h.seq === targetSeq ? { ...h, isUndone: true } : h)
-              ]
+                log,
+                ...state.history.map((h) =>
+                  h.seq === targetSeq ? { ...h, isUndone: true } : h,
+                ),
+              ],
             }));
           },
-          rollback: () => {}
+          rollback: () => {},
         };
       },
       reset: () => set({ profile: null, currentSeq: 1, history: [] }),
     }),
     {
-      name: 'cashless-monopoly-player-storage',
-    }
-  )
+      name: "cashless-monopoly-player-storage",
+    },
+  ),
 );

@@ -1,7 +1,7 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
-import Bank from './pages/Bank'
-import Player from './pages/Player'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Bank from "./pages/Bank";
+import Player from "./pages/Player";
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
         </Routes>
       </div>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;
