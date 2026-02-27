@@ -9,7 +9,7 @@
 
 A fully offline, serverless Progressive Web App (PWA) designed to replace physical paper money in analog board games (like Monopoly) with high-speed digital transactions.
 
-**Note:** *This project was generated and developed entirely by an AI assistant via [OpenCode](https://github.com/github-copilot).*
+**Note:** *This project was generated and developed entirely by an AI assistant via [OpenCode](https://opencode.ai).*
 
 ## 🌟 Overview & The "Offline-First" Architecture
 
