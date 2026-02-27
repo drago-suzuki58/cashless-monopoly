@@ -62,16 +62,7 @@ export default function Player() {
   };
 
   const showRegQR = () => {
-    if (!profile) return;
-    const payload: RegisterPayload = {
-      uuid: profile.uuid,
-      act: 'reg',
-      name: profile.name,
-      col: profile.color,
-      bal: profile.initialBalance,
-    };
-    setQrPayload(JSON.stringify(payload));
-    setQrTitle('登録用QRコード');
+    setIsScanningSync(true);
   };
 
   const handlePay = (amount: number) => {
@@ -215,6 +206,25 @@ export default function Player() {
   }
 
   // ----- Main View -----
+  if (isScanningSync && profile) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50 p-6 z-50 absolute inset-0">
+        <header className="flex items-center mb-8">
+          <button onClick={() => setIsScanningSync(false)} className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors">
+            <ArrowLeft size={24} />
+          </button>
+          <h1 className="text-xl font-bold ml-2">銀行から復元</h1>
+        </header>
+        <div className="flex-1 flex flex-col items-center">
+          <QRScanner onScan={handleScanSync} isScanning={true} />
+          <p className="mt-8 text-sm font-bold text-gray-500 text-center">
+            銀行の画面でプレイヤーパネルをタップし、<br/>復元用QRを表示して読み取ってください。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen bg-gray-50 max-h-screen overflow-hidden relative">
       <header className="flex items-center p-4 bg-white shadow-sm border-b border-gray-100 z-10 shrink-0">
