@@ -45,7 +45,7 @@ export default function Bank() {
         setIsScanning(false);
         setTimeout(() => setIsScanning(true), 2000);
       }
-    } catch (err) {
+    } catch {
       // Invalid JSON or non-app QR
       showToast('不正なQRコードです', 'error');
       setIsScanning(false);
@@ -66,6 +66,7 @@ export default function Bank() {
 
   const playAudio = (path: string) => {
     // Basic beep generation since we don't have files yet
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();

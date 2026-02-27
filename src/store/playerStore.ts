@@ -16,8 +16,8 @@ interface PlayerState {
   history: PlayerLog[];
   setProfile: (name: string, color: string, initialBalance: number) => void;
   recoverProfile: (uuid: string, name: string, color: string, nextSeq: number) => void;
-  addTransaction: (amount: number) => number; // returns the generated seq
-  addUndo: (targetSeq: number) => number; // returns the generated seq
+  addTransaction: (amount: number) => { seq: number, commit: () => void, rollback: () => void };
+  addUndo: (targetSeq: number) => { seq: number, commit: () => void, rollback: () => void };
   reset: () => void;
 }
 
@@ -46,37 +46,54 @@ export const usePlayerStore = create<PlayerState>()(
         });
       },
       addTransaction: (amount) => {
-        const { currentSeq, history } = get();
+        const { currentSeq } = get();
         const seq = currentSeq;
-        const log: PlayerLog = {
+        
+        // We increment the seq immediately to ensure uniqueness even if canceled (safe)
+        // But we don't add to history until committed
+        set({ currentSeq: seq + 1 });
+
+        return {
           seq,
-          timestamp: Date.now(),
-          type: 'tx',
-          amount,
+          commit: () => {
+            const log: PlayerLog = {
+              seq,
+              timestamp: Date.now(),
+              type: 'tx',
+              amount,
+            };
+            set((state) => ({ history: [log, ...state.history] }));
+          },
+          rollback: () => {
+             // In a perfect world we might decrement seq, but it's safer to just skip it
+             // so we don't accidentally reuse a sequence number if there was a race condition
+          }
         };
-        set({
-          currentSeq: seq + 1,
-          history: [log, ...history],
-        });
-        return seq;
       },
       addUndo: (targetSeq) => {
-        const { currentSeq, history } = get();
+        const { currentSeq } = get();
         const seq = currentSeq;
-        const log: PlayerLog = {
+        
+        set({ currentSeq: seq + 1 });
+
+        return {
           seq,
-          timestamp: Date.now(),
-          type: 'undo',
-          targetSeq,
+          commit: () => {
+            const log: PlayerLog = {
+              seq,
+              timestamp: Date.now(),
+              type: 'undo',
+              targetSeq,
+            };
+            set((state) => ({
+              history: [
+                log, 
+                ...state.history.map((h) => h.seq === targetSeq ? { ...h, isUndone: true } : h)
+              ]
+            }));
+          },
+          rollback: () => {}
         };
-        const updatedHistory = history.map((h) => 
-          h.seq === targetSeq ? { ...h, isUndone: true } : h
-        );
-        set({
-          currentSeq: seq + 1,
-          history: [log, ...updatedHistory],
-        });
-        return seq;
       },
       reset: () => set({ profile: null, currentSeq: 1, history: [] }),
     }),

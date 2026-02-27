@@ -24,7 +24,7 @@ export default function Player() {
   const [color, setColor] = useState(COLORS[0].hex);
   const [initialBalance, setInitialBalance] = useState('1500');
   
-  const [qrPayload, setQrPayload] = useState<string | null>(null);
+  const [qrPayload, setQrPayload] = useState<{ text: string, type: 'tx' | 'undo' | 'reg', commit?: () => void, rollback?: () => void } | null>(null);
   const [qrTitle, setQrTitle] = useState('');
   
   const [showHistory, setShowHistory] = useState(false);
@@ -37,7 +37,7 @@ export default function Player() {
         usePlayerStore.getState().recoverProfile(data.uuid, data.name, data.col, data.seq);
         setIsScanningSync(false);
       }
-    } catch (e) {
+    } catch {
       // Ignore invalid QR
     }
   };
@@ -57,7 +57,7 @@ export default function Player() {
       col: color,
       bal,
     };
-    setQrPayload(JSON.stringify(payload));
+    setQrPayload({ text: JSON.stringify(payload), type: 'reg' });
     setQrTitle('登録用QRコード');
   };
 
@@ -67,40 +67,40 @@ export default function Player() {
 
   const handlePay = (amount: number) => {
     if (!profile) return;
-    const seq = addTransaction(-amount);
+    const { seq, commit, rollback } = addTransaction(-amount);
     const payload: TransactionPayload = {
       uuid: profile.uuid,
       act: 'tx',
       amt: -amount,
       seq,
     };
-    setQrPayload(JSON.stringify(payload));
+    setQrPayload({ text: JSON.stringify(payload), type: 'tx', commit, rollback });
     setQrTitle(`M ${amount.toLocaleString()} 支払う`);
   };
 
   const handleReceive = (amount: number) => {
     if (!profile) return;
-    const seq = addTransaction(amount);
+    const { seq, commit, rollback } = addTransaction(amount);
     const payload: TransactionPayload = {
       uuid: profile.uuid,
       act: 'tx',
       amt: amount,
       seq,
     };
-    setQrPayload(JSON.stringify(payload));
+    setQrPayload({ text: JSON.stringify(payload), type: 'tx', commit, rollback });
     setQrTitle(`M ${amount.toLocaleString()} 貰う`);
   };
 
   const handleUndo = (targetSeq: number) => {
     if (!profile) return;
-    const seq = addUndo(targetSeq);
+    const { seq, commit, rollback } = addUndo(targetSeq);
     const payload: UndoPayload = {
       uuid: profile.uuid,
       act: 'undo',
       tgt: targetSeq,
       seq,
     };
-    setQrPayload(JSON.stringify(payload));
+    setQrPayload({ text: JSON.stringify(payload), type: 'undo', commit, rollback });
     setQrTitle(`取引 (seq:${targetSeq}) を取消`);
     setShowHistory(false);
   };
@@ -259,9 +259,17 @@ export default function Player() {
       {/* QR Code Modal */}
       {qrPayload && (
         <QRDisplay 
-          payload={qrPayload} 
+          payload={qrPayload.text} 
           title={qrTitle} 
-          onClose={() => setQrPayload(null)} 
+          isConfirmable={qrPayload.type !== 'reg'} // Registration usually isn't strict about history
+          onClose={() => {
+            if (qrPayload.rollback) qrPayload.rollback();
+            setQrPayload(null);
+          }}
+          onConfirm={() => {
+            if (qrPayload.commit) qrPayload.commit();
+            setQrPayload(null);
+          }}
         />
       )}
 
