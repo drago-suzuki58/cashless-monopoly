@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, History, RefreshCw, X, LogOut } from "lucide-react";
 import { usePlayerStore } from "../store/playerStore";
@@ -41,6 +41,18 @@ export default function Player() {
 
   const [showHistory, setShowHistory] = useState(false);
   const [isScanningSync, setIsScanningSync] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+    id: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const handleScanSync = (text: string) => {
     try {
@@ -50,6 +62,7 @@ export default function Player() {
           .getState()
           .recoverProfile(data.uuid, data.name, data.col, data.seq, data.hist);
         playAudio("success");
+        setToast({ message: "データを復元しました", type: "success", id: Date.now() });
         setIsScanningSync(false);
       }
     } catch {
@@ -403,6 +416,29 @@ export default function Player() {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification Overlay */}
+      {toast && (
+        <div
+          key={toast.id}
+          className="absolute inset-0 z-50 flex items-center justify-center p-6 pointer-events-none"
+        >
+          <div className="absolute inset-0 bg-black/20 animate-in fade-in duration-200" />
+          <div
+            className={cn(
+              "relative w-full max-w-sm p-8 rounded-3xl shadow-2xl animate-in zoom-in-90 fade-in duration-200 text-center",
+              toast.type === "success"
+                ? "bg-emerald-500 text-white"
+                : "bg-rose-500 text-white",
+            )}
+          >
+            <div className="text-3xl font-black mb-2 tracking-tight leading-tight">
+              {toast.type === "success" ? "SUCCESS!" : "ERROR!"}
+            </div>
+            <div className="text-xl font-bold opacity-90">{toast.message}</div>
           </div>
         </div>
       )}
