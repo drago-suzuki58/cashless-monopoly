@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, History, RefreshCw, X } from 'lucide-react';
+import { ArrowLeft, History, RefreshCw, X, LogOut } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 import { Keypad } from '../components/Keypad';
 import { QRDisplay } from '../components/QRDisplay';
@@ -18,7 +18,7 @@ const COLORS = [
 ];
 
 export default function Player() {
-  const { profile, setProfile, addTransaction, addUndo, history } = usePlayerStore();
+  const { profile, setProfile, addTransaction, addUndo, history, reset } = usePlayerStore();
   
   const [name, setName] = useState('');
   const [color, setColor] = useState(COLORS[0].hex);
@@ -241,14 +241,27 @@ export default function Player() {
         <button 
           onClick={showRegQR}
           className="p-2 text-indigo-600 bg-indigo-50 rounded-full mr-2 hover:bg-indigo-100 transition-colors"
+          title="銀行からデータを復元"
         >
           <RefreshCw size={20} />
         </button>
         <button 
           onClick={() => setShowHistory(true)}
-          className="p-2 text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+          className="p-2 text-gray-600 bg-gray-100 rounded-full mr-2 hover:bg-gray-200 transition-colors"
+          title="履歴を表示"
         >
           <History size={20} />
+        </button>
+        <button 
+          onClick={() => {
+            if (window.confirm('プレイヤーデータをリセットして最初からやり直しますか？')) {
+              reset();
+            }
+          }}
+          className="p-2 text-rose-600 bg-rose-50 rounded-full hover:bg-rose-100 transition-colors"
+          title="プレイヤーデータをリセット"
+        >
+          <LogOut size={20} />
         </button>
       </header>
       
