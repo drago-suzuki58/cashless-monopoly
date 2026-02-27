@@ -190,9 +190,13 @@ export default function Bank() {
               <p className="text-center text-gray-400 mt-10">
                 履歴がありません
               </p>
-            ) : (
-              history.map((log) => {
+            ) : (() => {
+              const undoneTxIds = new Set(
+                history.filter((h) => h.type === "undo").map((h) => `${h.playerId}-${h.targetSeq}`)
+              );
+              return history.map((log) => {
                 const seq = log.id.split('-').pop();
+                const isUndone = log.type === "tx" && undoneTxIds.has(log.id);
                 return (
                   <div
                     key={log.id}
@@ -204,7 +208,8 @@ export default function Bank() {
                           {log.playerName}
                         </span>
                         <span className="text-xs text-gray-400">
-                          {new Date(log.timestamp).toLocaleTimeString()} · seq:{seq}
+                          {new Date(log.timestamp).toLocaleTimeString()}
+                          {log.type !== 'reg' && ` · seq:${seq}`}
                         </span>
                       </div>
                       
@@ -215,29 +220,41 @@ export default function Bank() {
                       )}
                       
                       {log.type === "tx" && (
-                        <div
-                          className={cn(
-                            "font-bold text-lg",
-                            (log.amount || 0) > 0
-                              ? "text-emerald-500"
-                              : "text-rose-500",
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={cn(
+                              "font-bold text-lg",
+                              (log.amount || 0) > 0
+                                ? "text-emerald-500"
+                                : "text-rose-500",
+                              isUndone && "line-through opacity-50"
+                            )}
+                          >
+                            {(log.amount || 0) > 0 ? "+" : ""}
+                            {log.amount} M
+                          </div>
+                          {isUndone && (
+                            <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                              取消済
+                            </span>
                           )}
-                        >
-                          {(log.amount || 0) > 0 ? "+" : ""}
-                          {log.amount} M
                         </div>
                       )}
 
                       {log.type === "undo" && (
                         <div className="text-gray-500 font-medium">
                           取消済 (seq:{log.targetSeq})
+                          <span className="ml-2 font-bold">
+                            {(log.amount || 0) > 0 ? "+" : ""}
+                            {log.amount} M
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
         </div>
       )}

@@ -406,20 +406,32 @@ export default function Player() {
                       {log.seq}
                     </div>
                     {log.type === "tx" ? (
-                      <div
-                        className={cn(
-                          "font-bold text-lg",
-                          (log.amount || 0) > 0
-                            ? "text-emerald-500"
-                            : "text-rose-500",
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={cn(
+                            "font-bold text-lg",
+                            (log.amount || 0) > 0
+                              ? "text-emerald-500"
+                              : "text-rose-500",
+                            log.isUndone && "line-through opacity-50"
+                          )}
+                        >
+                          {log.amount! > 0 ? "+" : ""}
+                          {log.amount} M
+                        </div>
+                        {log.isUndone && (
+                          <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            取消済
+                          </span>
                         )}
-                      >
-                        {log.amount! > 0 ? "+" : ""}
-                        {log.amount} M
                       </div>
                     ) : (
                       <div className="text-gray-500 font-medium">
-                        取消済 (seq:{log.targetSeq})
+                        取消済 (seq:{log.targetSeq}) 
+                        <span className="ml-2 font-bold">
+                          {log.amount! > 0 ? "+" : ""}
+                          {log.amount} M
+                        </span>
                       </div>
                     )}
                   </div>
