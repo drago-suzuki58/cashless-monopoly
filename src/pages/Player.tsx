@@ -4,8 +4,9 @@ import { ArrowLeft, History, RefreshCw, X } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 import { Keypad } from '../components/Keypad';
 import { QRDisplay } from '../components/QRDisplay';
+import { QRScanner } from '../components/QRScanner';
 import { cn } from '../utils/cn';
-import type { RegisterPayload, TransactionPayload, UndoPayload } from '../types';
+import type { RegisterPayload, TransactionPayload, UndoPayload, SyncPayload } from '../types';
 
 const COLORS = [
   { name: 'Red', hex: '#EF4444' },
@@ -27,6 +28,19 @@ export default function Player() {
   const [qrTitle, setQrTitle] = useState('');
   
   const [showHistory, setShowHistory] = useState(false);
+  const [isScanningSync, setIsScanningSync] = useState(false);
+
+  const handleScanSync = (text: string) => {
+    try {
+      const data = JSON.parse(text) as SyncPayload;
+      if (data.act === 'sync') {
+        usePlayerStore.getState().recoverProfile(data.uuid, data.name, data.col, data.seq);
+        setIsScanningSync(false);
+      }
+    } catch (e) {
+      // Ignore invalid QR
+    }
+  };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +116,25 @@ export default function Player() {
 
   // ----- Registration View -----
   if (!profile) {
+    if (isScanningSync) {
+      return (
+        <div className="flex flex-col min-h-screen bg-gray-50 p-6">
+          <header className="flex items-center mb-8">
+            <button onClick={() => setIsScanningSync(false)} className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors">
+              <ArrowLeft size={24} />
+            </button>
+            <h1 className="text-xl font-bold ml-2">銀行から復元</h1>
+          </header>
+          <div className="flex-1 flex flex-col items-center">
+            <QRScanner onScan={handleScanSync} isScanning={true} />
+            <p className="mt-8 text-sm font-bold text-gray-500 text-center">
+              銀行の画面でプレイヤーパネルをタップし、<br/>復元用QRを表示して読み取ってください。
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col min-h-screen bg-gray-50 p-6">
         <header className="flex items-center mb-8">
@@ -158,6 +191,23 @@ export default function Player() {
             className="w-full mt-8 bg-gray-900 text-white font-bold py-4 rounded-xl shadow hover:bg-gray-800 active:scale-95 transition-all"
           >
             登録して開始する
+          </button>
+
+          <div className="relative py-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-gray-50 px-4 text-sm text-gray-500 font-medium">または</span>
+            </div>
+          </div>
+
+          <button 
+            type="button"
+            onClick={() => setIsScanningSync(true)}
+            className="w-full bg-white border-2 border-gray-200 text-gray-700 font-bold py-4 rounded-xl shadow-sm hover:bg-gray-100 active:scale-95 transition-all"
+          >
+            銀行からデータを復元する
           </button>
         </form>
       </div>

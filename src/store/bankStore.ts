@@ -30,26 +30,47 @@ export const useBankStore = create<BankState>()(
         
         if (payload.act === 'reg') {
           const { uuid, name, col, bal } = payload as RegisterPayload;
-          const isNew = !state.players[uuid];
+          const existingPlayer = state.players[uuid];
           
-          set((s) => ({
-            players: {
-              ...s.players,
-              [uuid]: { uuid, name, color: col, balance: bal }
-            }
-          }));
+          if (existingPlayer) {
+            set((s) => ({
+              players: {
+                ...s.players,
+                [uuid]: { ...existingPlayer, name, color: col }
+              }
+            }));
 
-          const log: BankLog = {
-            id: `reg-${uuid}-${timestamp}`,
-            timestamp,
-            playerId: uuid,
-            playerName: name,
-            type: 'reg',
-            message: `${name}が${isNew ? '登録' : '再登録'}されました（初期残高: ${bal}）`,
-          };
-          
-          set((s) => ({ history: [log, ...s.history] }));
-          return { success: true, message: log.message, log };
+            const log: BankLog = {
+              id: `reg-${uuid}-${timestamp}`,
+              timestamp,
+              playerId: uuid,
+              playerName: name,
+              type: 'reg',
+              message: `${name}がプロファイルを更新しました`,
+            };
+            
+            set((s) => ({ history: [log, ...s.history] }));
+            return { success: true, message: log.message, log };
+          } else {
+            set((s) => ({
+              players: {
+                ...s.players,
+                [uuid]: { uuid, name, color: col, balance: bal }
+              }
+            }));
+
+            const log: BankLog = {
+              id: `reg-${uuid}-${timestamp}`,
+              timestamp,
+              playerId: uuid,
+              playerName: name,
+              type: 'reg',
+              message: `${name}が登録されました（初期残高: ${bal}）`,
+            };
+            
+            set((s) => ({ history: [log, ...s.history] }));
+            return { success: true, message: log.message, log };
+          }
         }
 
         if (payload.act === 'tx') {

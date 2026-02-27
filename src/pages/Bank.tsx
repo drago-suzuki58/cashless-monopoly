@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Trash2, History } from 'lucide-react';
-import { useBankStore } from '../store/bankStore';
+import { useBankStore, type BankPlayer } from '../store/bankStore';
 import { QRScanner } from '../components/QRScanner';
+import { QRDisplay } from '../components/QRDisplay';
 import { cn } from '../utils/cn';
 import type { Payload } from '../types';
 
@@ -12,8 +13,18 @@ export default function Bank() {
   const [isScanning, setIsScanning] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error', id: number } | null>(null);
+  const [syncPlayer, setSyncPlayer] = useState<BankPlayer | null>(null);
 
   const playersList = Object.values(players);
+
+  const getNextSeq = (uuid: string) => {
+    const { processedSeqs } = useBankStore.getState();
+    const seqs = processedSeqs
+      .filter(id => id.startsWith(`${uuid}-`))
+      .map(id => parseInt(id.split('-')[1], 10))
+      .filter(n => !isNaN(n));
+    return seqs.length > 0 ? Math.max(...seqs) + 1 : 1;
+  };
 
   const handleScan = (decodedText: string) => {
     try {
@@ -131,7 +142,8 @@ export default function Bank() {
               {playersList.map((p) => (
                 <div 
                   key={p.uuid}
-                  className="bg-gray-50 rounded-2xl p-4 border border-gray-100 flex flex-col relative overflow-hidden"
+                  onClick={() => setSyncPlayer(p)}
+                  className="bg-gray-50 rounded-2xl p-4 border border-gray-100 flex flex-col relative overflow-hidden cursor-pointer hover:bg-gray-100 transition-colors"
                 >
                   <div 
                     className="absolute top-0 left-0 w-full h-1" 
@@ -196,6 +208,21 @@ export default function Bank() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Sync Player Modal */}
+      {syncPlayer && (
+        <QRDisplay 
+          payload={JSON.stringify({
+            act: 'sync',
+            uuid: syncPlayer.uuid,
+            name: syncPlayer.name,
+            col: syncPlayer.color,
+            seq: getNextSeq(syncPlayer.uuid)
+          })} 
+          title={`${syncPlayer.name} の復元用QR`} 
+          onClose={() => setSyncPlayer(null)} 
+        />
       )}
     </div>
   );

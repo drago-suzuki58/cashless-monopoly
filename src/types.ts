@@ -1,4 +1,4 @@
-export type TransactionType = 'reg' | 'tx' | 'undo';
+export type TransactionType = 'reg' | 'tx' | 'undo' | 'sync';
 
 export interface BasePayload {
   uuid: string;
@@ -10,6 +10,13 @@ export interface RegisterPayload extends BasePayload {
   name: string;
   col: string; // color (hex or predefined class)
   bal: number; // initial balance
+}
+
+export interface SyncPayload extends BasePayload {
+  act: 'sync';
+  name: string;
+  col: string;
+  seq: number;
 }
 
 export interface TransactionPayload extends BasePayload {

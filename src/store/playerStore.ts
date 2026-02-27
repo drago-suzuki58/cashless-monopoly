@@ -15,6 +15,7 @@ interface PlayerState {
   currentSeq: number;
   history: PlayerLog[];
   setProfile: (name: string, color: string, initialBalance: number) => void;
+  recoverProfile: (uuid: string, name: string, color: string, nextSeq: number) => void;
   addTransaction: (amount: number) => number; // returns the generated seq
   addUndo: (targetSeq: number) => number; // returns the generated seq
   reset: () => void;
@@ -35,6 +36,13 @@ export const usePlayerStore = create<PlayerState>()(
           // It's probably better to keep history but maybe add a register log.
           currentSeq: 1,
           history: [] 
+        });
+      },
+      recoverProfile: (uuid, name, color, nextSeq) => {
+        set({
+          profile: { uuid, name, color, initialBalance: 0 },
+          currentSeq: nextSeq,
+          history: [] // clear history on recovery since we don't sync it
         });
       },
       addTransaction: (amount) => {
