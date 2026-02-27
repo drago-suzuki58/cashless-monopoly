@@ -47,6 +47,14 @@ export default function Player() {
     id: number;
   } | null>(null);
 
+  // Calculate current balance based on initial and history
+  const currentBalance = profile ? profile.initialBalance + history.reduce((acc, log) => {
+    if (log.type === 'tx' && !log.isUndone) {
+      return acc + (log.amount || 0);
+    }
+    return acc;
+  }, 0) : 0;
+
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => setToast(null), 3000);
@@ -60,7 +68,7 @@ export default function Player() {
       if (data.act === "sync") {
         usePlayerStore
           .getState()
-          .recoverProfile(data.uuid, data.name, data.col, data.seq, data.hist);
+          .recoverProfile(data.uuid, data.name, data.col, data.seq, data.bal, data.hist);
         playAudio("success");
         setToast({ message: "データを復元しました", type: "success", id: Date.now() });
         setIsScanningSync(false);
@@ -339,6 +347,16 @@ export default function Player() {
       </header>
 
       <main className="flex-1 flex flex-col pt-4 bg-gray-50 relative min-h-0">
+        <div className="px-4 mb-2 shrink-0">
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
+            <span className="text-gray-500 font-bold text-sm">現在の残高</span>
+            <div className="text-2xl font-extrabold text-gray-900">
+              <span className="text-gray-400 text-lg mr-1">M</span>
+              {currentBalance.toLocaleString()}
+            </div>
+          </div>
+        </div>
+        
         <Keypad onPay={handlePay} onReceive={handleReceive} />
       </main>
 

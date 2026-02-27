@@ -20,6 +20,7 @@ interface PlayerState {
     name: string,
     color: string,
     nextSeq: number,
+    bal: number,
     hist?: [number, number, number, number][]
   ) => void;
   addTransaction: (amount: number) => {
@@ -52,7 +53,7 @@ export const usePlayerStore = create<PlayerState>()(
           history: [],
         });
       },
-      recoverProfile: (uuid, name, color, nextSeq, hist) => {
+      recoverProfile: (uuid, name, color, nextSeq, bal, hist) => {
         const history: PlayerLog[] = [];
         const undoneSeqs = new Set<number>();
 
@@ -86,7 +87,7 @@ export const usePlayerStore = create<PlayerState>()(
         }
 
         set({
-          profile: { uuid, name, color, initialBalance: 0 },
+          profile: { uuid, name, color, initialBalance: bal },
           currentSeq: nextSeq,
           history, // Use reconstructed history
         });

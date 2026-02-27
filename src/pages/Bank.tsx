@@ -236,6 +236,7 @@ export default function Bank() {
             uuid: syncPlayer.uuid,
             name: syncPlayer.name,
             col: syncPlayer.color,
+            bal: syncPlayer.balance,
             seq: getNextSeq(syncPlayer.uuid),
             hist: getPlayerHistory(syncPlayer.uuid),
           })}
