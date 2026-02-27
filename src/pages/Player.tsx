@@ -6,6 +6,7 @@ import { Keypad } from "../components/Keypad";
 import { QRDisplay } from "../components/QRDisplay";
 import { QRScanner } from "../components/QRScanner";
 import { cn } from "../utils/cn";
+import { playAudio } from "../utils/audio";
 import type {
   RegisterPayload,
   TransactionPayload,
@@ -48,6 +49,7 @@ export default function Player() {
         usePlayerStore
           .getState()
           .recoverProfile(data.uuid, data.name, data.col, data.seq, data.hist);
+        playAudio("success");
         setIsScanningSync(false);
       }
     } catch {

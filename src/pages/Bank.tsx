@@ -5,6 +5,7 @@ import { useBankStore, type BankPlayer } from "../store/bankStore";
 import { QRScanner } from "../components/QRScanner";
 import { QRDisplay } from "../components/QRDisplay";
 import { cn } from "../utils/cn";
+import { playAudio } from "../utils/audio";
 import type { Payload } from "../types";
 
 export default function Bank() {
@@ -54,14 +55,14 @@ export default function Bank() {
       if (result.success) {
         showToast(result.message, "success");
         // Play success sound
-        playAudio("/success.mp3");
+        playAudio("success");
 
         // Pause scanning briefly to prevent double scan spam UI
         setIsScanning(false);
         setTimeout(() => setIsScanning(true), 2000);
       } else {
         showToast(result.message, "error");
-        playAudio("/error.mp3");
+        playAudio("error");
         setIsScanning(false);
         setTimeout(() => setIsScanning(true), 2000);
       }
@@ -83,36 +84,6 @@ export default function Bank() {
       return () => clearTimeout(timer);
     }
   }, [toast]);
-
-  const playAudio = (path: string) => {
-    // Basic beep generation since we don't have files yet
-    const ctx = new (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      window.AudioContext || (window as any).webkitAudioContext
-    )();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    if (path.includes("success")) {
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
-      osc.frequency.setValueAtTime(1108.73, ctx.currentTime + 0.1); // C#6
-      gain.gain.setValueAtTime(0.5, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.3);
-    } else {
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(150, ctx.currentTime);
-      gain.gain.setValueAtTime(0.5, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.3);
-    }
-  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 max-h-screen overflow-hidden">
