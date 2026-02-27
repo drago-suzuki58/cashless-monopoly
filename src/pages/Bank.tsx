@@ -26,7 +26,7 @@ export default function Bank() {
     const { processedSeqs } = useBankStore.getState();
     const seqs = processedSeqs
       .filter((id) => id.startsWith(`${uuid}-`))
-      .map((id) => parseInt(id.split("-")[1], 10))
+      .map((id) => parseInt(id.split("-").pop() || "0", 10))
       .filter((n) => !isNaN(n));
     return seqs.length > 0 ? Math.max(...seqs) + 1 : 1;
   };
