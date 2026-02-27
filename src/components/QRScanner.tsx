@@ -8,6 +8,14 @@ interface QRScannerProps {
 
 export function QRScanner({ onScan, isScanning }: QRScannerProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const isScanningRef = useRef(isScanning);
+  const onScanRef = useRef(onScan);
+
+  // Sync props to refs to avoid re-running the camera effect
+  useEffect(() => {
+    isScanningRef.current = isScanning;
+    onScanRef.current = onScan;
+  }, [isScanning, onScan]);
 
   useEffect(() => {
     if (!scannerRef.current) {
@@ -18,14 +26,14 @@ export function QRScanner({ onScan, isScanning }: QRScannerProps) {
       try {
         if (scannerRef.current && !scannerRef.current.isScanning) {
           await scannerRef.current.start(
-            { facingMode: "user" }, // Use front camera typically for a tablet/kiosk looking at players, or "environment" for rear. Let's use "user" (front-facing) as specified in requirements "インカメラを常時起動"
+            { facingMode: "user" }, // Use front camera typically for a tablet/kiosk looking at players
             {
               fps: 10,
               qrbox: { width: 250, height: 250 },
             },
             (decodedText) => {
-              if (isScanning) {
-                onScan(decodedText);
+              if (isScanningRef.current) {
+                onScanRef.current(decodedText);
               }
             },
             () => {
@@ -38,20 +46,14 @@ export function QRScanner({ onScan, isScanning }: QRScannerProps) {
       }
     };
 
-    if (isScanning) {
-      startScanning();
-    } else {
-      if (scannerRef.current?.isScanning) {
-        scannerRef.current.stop().catch(console.error);
-      }
-    }
+    startScanning();
 
     return () => {
       if (scannerRef.current?.isScanning) {
         scannerRef.current.stop().catch(console.error);
       }
     };
-  }, [isScanning, onScan]);
+  }, []); // Run only once on mount
 
   return (
     <div className="relative w-full aspect-square max-w-sm mx-auto overflow-hidden rounded-3xl bg-gray-900 border-4 border-gray-200 shadow-inner">
