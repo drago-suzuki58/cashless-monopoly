@@ -47,7 +47,7 @@ export default function Player() {
       if (data.act === "sync") {
         usePlayerStore
           .getState()
-          .recoverProfile(data.uuid, data.name, data.col, data.seq);
+          .recoverProfile(data.uuid, data.name, data.col, data.seq, data.hist);
         setIsScanningSync(false);
       }
     } catch {

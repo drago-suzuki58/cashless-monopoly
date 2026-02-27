@@ -168,6 +168,7 @@ export const useBankStore = create<BankState>()(
             playerName: player.name,
             type: "undo",
             amount: amtToReverse, // Show the reversed amount
+            targetSeq: tgt, // Store target seq for restoring player history
             message: `${player.name}が過去の取引（${targetLog.amount}）を取り消しました`,
           };
 

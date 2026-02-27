@@ -30,6 +30,22 @@ export default function Bank() {
     return seqs.length > 0 ? Math.max(...seqs) + 1 : 1;
   };
 
+  const getPlayerHistory = (uuid: string) => {
+    const { history } = useBankStore.getState();
+    const playerLogs = history.filter(
+      (h) => h.playerId === uuid && (h.type === "tx" || h.type === "undo")
+    );
+    
+    // QR Code size limit mitigation: only send the latest 20 transactions
+    return playerLogs.slice(0, 20).map((log) => {
+      const seqStr = log.id.split("-").pop();
+      const seq = parseInt(seqStr || "0", 10);
+      const typeNum = log.type === "tx" ? 1 : 2;
+      const val = log.type === "tx" ? (log.amount || 0) : (log.targetSeq || 0);
+      return [seq, typeNum, val, log.timestamp];
+    });
+  };
+
   const handleScan = (decodedText: string) => {
     try {
       const payload = JSON.parse(decodedText) as Payload;
@@ -70,8 +86,8 @@ export default function Bank() {
 
   const playAudio = (path: string) => {
     // Basic beep generation since we don't have files yet
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ctx = new (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       window.AudioContext || (window as any).webkitAudioContext
     )();
     const osc = ctx.createOscillator();
@@ -250,6 +266,7 @@ export default function Bank() {
             name: syncPlayer.name,
             col: syncPlayer.color,
             seq: getNextSeq(syncPlayer.uuid),
+            hist: getPlayerHistory(syncPlayer.uuid),
           })}
           title={`${syncPlayer.name} の復元用QR`}
           onClose={() => setSyncPlayer(null)}

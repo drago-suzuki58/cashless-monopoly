@@ -17,6 +17,7 @@ export interface SyncPayload extends BasePayload {
   name: string;
   col: string;
   seq: number;
+  hist?: [number, number, number, number][]; // [seq, type(1=tx, 2=undo), value(amount or tgt), timestamp]
 }
 
 export interface TransactionPayload extends BasePayload {
@@ -41,6 +42,7 @@ export interface BankLog {
   playerName: string;
   type: TransactionType;
   amount?: number;
+  targetSeq?: number;
   message: string;
 }
 
