@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Trash2, History } from "lucide-react";
+import { ArrowLeft, Trash2, History, X } from "lucide-react";
 import { useBankStore, type BankPlayer } from "../store/bankStore";
 import { QRScanner } from "../components/QRScanner";
 import { QRDisplay } from "../components/QRDisplay";
@@ -182,7 +182,7 @@ export default function Bank() {
               onClick={() => setShowHistory(false)}
               className="p-2 text-gray-500 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
             >
-              <ArrowLeft size={24} className="rotate-[-90deg]" />
+              <X size={24} />
             </button>
           </header>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -191,22 +191,52 @@ export default function Bank() {
                 履歴がありません
               </p>
             ) : (
-              history.map((log) => (
-                <div
-                  key={log.id}
-                  className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-bold text-gray-800">
-                      {log.playerName}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {new Date(log.timestamp).toLocaleTimeString()}
-                    </span>
+              history.map((log) => {
+                const seq = log.id.split('-').pop();
+                return (
+                  <div
+                    key={log.id}
+                    className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-gray-800">
+                          {log.playerName}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(log.timestamp).toLocaleTimeString()} · seq:{seq}
+                        </span>
+                      </div>
+                      
+                      {log.type === "reg" && (
+                        <div className="text-gray-500 font-medium">
+                          プレイヤー登録
+                        </div>
+                      )}
+                      
+                      {log.type === "tx" && (
+                        <div
+                          className={cn(
+                            "font-bold text-lg",
+                            (log.amount || 0) > 0
+                              ? "text-emerald-500"
+                              : "text-rose-500",
+                          )}
+                        >
+                          {(log.amount || 0) > 0 ? "+" : ""}
+                          {log.amount} M
+                        </div>
+                      )}
+
+                      {log.type === "undo" && (
+                        <div className="text-gray-500 font-medium">
+                          取消済 (seq:{log.targetSeq})
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-gray-600 text-sm">{log.message}</div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

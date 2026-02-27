@@ -56,11 +56,11 @@ export const useBankStore = create<BankState>()(
               playerId: uuid,
               playerName: name,
               type: "reg",
-              message: `${name}がプロファイルを更新しました`,
+              amount: bal, // use amount field for initial balance
             };
 
             set((s) => ({ history: [log, ...s.history] }));
-            return { success: true, message: log.message, log };
+            return { success: true, message: `${name}がプロファイルを更新しました`, log };
           } else {
             set((s) => ({
               players: {
@@ -75,11 +75,11 @@ export const useBankStore = create<BankState>()(
               playerId: uuid,
               playerName: name,
               type: "reg",
-              message: `${name}が登録されました（初期残高: ${bal}）`,
+              amount: bal, // use amount field for initial balance
             };
 
             set((s) => ({ history: [log, ...s.history] }));
-            return { success: true, message: log.message, log };
+            return { success: true, message: `${name}が登録されました（初期残高: ${bal}）`, log };
           }
         }
 
@@ -117,11 +117,10 @@ export const useBankStore = create<BankState>()(
             playerName: player.name,
             type: "tx",
             amount: amt,
-            message: `${player.name}が ${Math.abs(amt)} ${actionWord}`,
           };
 
           set((s) => ({ history: [log, ...s.history] }));
-          return { success: true, message: log.message, log };
+          return { success: true, message: `${player.name}が ${Math.abs(amt)} ${actionWord}`, log };
         }
 
         if (payload.act === "undo") {
@@ -169,11 +168,10 @@ export const useBankStore = create<BankState>()(
             type: "undo",
             amount: amtToReverse, // Show the reversed amount
             targetSeq: tgt, // Store target seq for restoring player history
-            message: `${player.name}が過去の取引（${targetLog.amount}）を取り消しました`,
           };
 
           set((s) => ({ history: [log, ...s.history] }));
-          return { success: true, message: log.message, log };
+          return { success: true, message: `${player.name}が過去の取引（${targetLog.amount}）を取り消しました`, log };
         }
 
         return { success: false, message: "不正なデータ形式です" };

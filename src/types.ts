@@ -43,7 +43,6 @@ export interface BankLog {
   type: TransactionType;
   amount?: number;
   targetSeq?: number;
-  message: string;
 }
 
 // Log type for Player
