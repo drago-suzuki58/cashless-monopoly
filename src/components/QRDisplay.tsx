@@ -6,6 +6,8 @@ interface QRDisplayProps {
   onClose: () => void;
   onConfirm?: () => void;
   title?: string;
+  /** Contextual instruction shown below the QR code */
+  description?: string;
 }
 
 export function QRDisplay({
@@ -13,6 +15,7 @@ export function QRDisplay({
   onClose,
   onConfirm,
   title = "銀行にかざしてください",
+  description = "読み取りが完了したら、下の「読取完了」を押してください",
 }: QRDisplayProps) {
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-in fade-in zoom-in duration-200">
@@ -39,8 +42,7 @@ export function QRDisplay({
           </div>
           
           <p className="text-gray-500 text-sm font-medium text-center mt-2 leading-relaxed">
-            銀行端末で読み取ってもらった後、<br />
-            完了ボタンを押してください
+            {description}
           </p>
         </div>
 

@@ -1,18 +1,92 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Trash2, History, X } from "lucide-react";
+import { ArrowLeft, Trash2, History, X, HelpCircle } from "lucide-react";
 import { useBankStore, type BankPlayer } from "../store/bankStore";
 import { QRScanner } from "../components/QRScanner";
 import { QRDisplay } from "../components/QRDisplay";
+import { HelpModal, type HelpSection } from "../components/HelpModal";
 import { cn } from "../utils/cn";
 import { playAudio } from "../utils/audio";
 import type { Payload } from "../types";
+
+// --- Help content definitions ---
+
+const bankHelpSections: HelpSection[] = [
+  {
+    title: "銀行端末の役割",
+    borderColor: "border-indigo-500",
+    content: (
+      <p>
+        この端末はゲーム全体のお金を管理する<strong>「銀行」</strong>です。
+        テーブルの中央に置き、プレイヤーが見せるQRコードをカメラで読み取ることで残高を自動更新します。
+      </p>
+    ),
+  },
+  {
+    title: "カメラが読み取れない時",
+    borderColor: "border-emerald-500",
+    content: (
+      <p>
+        ピントが合わない場合は、カメラ映像の下にあるドロップダウンから
+        <strong>別のカメラやマクロレンズ</strong>に切り替えてみてください。
+      </p>
+    ),
+  },
+  {
+    title: "プレイヤーのデータが消えた時",
+    borderColor: "border-amber-500",
+    content: (
+      <div>
+        <div className="bg-amber-50 p-3 rounded-xl border border-amber-100 mb-2">
+          <strong>なぜ復元が必要？</strong>
+          <br />
+          このアプリは完全オフラインのため、プレイヤーが画面を閉じてデータが消えると銀行側とズレてしまい、以降の取引がエラーになります。
+        </div>
+        <p>
+          <strong>復元のしかた：</strong>
+        </p>
+        <ol className="list-none space-y-1 mt-1">
+          <li>
+            <strong>1.</strong> 下のプレイヤー一覧から、該当する名前のパネルを<strong>タップ</strong>します。
+          </li>
+          <li>
+            <strong>2.</strong> 復元用QRが表示されます。
+          </li>
+          <li>
+            <strong>3.</strong> プレイヤーの端末で「銀行から復元」を選び、このQRを読み取ってもらってください。
+          </li>
+        </ol>
+      </div>
+    ),
+  },
+  {
+    title: "アイコンの意味",
+    borderColor: "border-slate-500",
+    content: (
+      <div className="space-y-3 bg-gray-50 p-3 rounded-xl">
+        <div className="flex items-center">
+          <History size={18} className="mr-3 text-gray-500 shrink-0" />
+          <span>
+            <strong>全体履歴:</strong> 全プレイヤーの取引ログを確認します。
+          </span>
+        </div>
+        <div className="flex items-center">
+          <Trash2 size={18} className="mr-3 text-rose-500 shrink-0" />
+          <span>
+            <strong>リセット:</strong> 全データ（残高・履歴）を消去します。
+          </span>
+        </div>
+      </div>
+    ),
+  },
+];
 
 export default function Bank() {
   const { players, history, processPayload, resetBank } = useBankStore();
 
   const [isScanning, setIsScanning] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -85,8 +159,16 @@ export default function Bank() {
           <button
             onClick={() => setShowHistory(true)}
             className="p-2 text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200"
+            title="全体履歴"
           >
             <History size={20} />
+          </button>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="p-2 text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200"
+            title="使い方"
+          >
+            <HelpCircle size={20} />
           </button>
           <button
             onClick={() => {
@@ -95,6 +177,7 @@ export default function Bank() {
               }
             }}
             className="p-2 text-rose-600 bg-rose-50 rounded-full hover:bg-rose-100"
+            title="リセット"
           >
             <Trash2 size={20} />
           </button>
@@ -142,6 +225,9 @@ export default function Bank() {
                   <div className="text-3xl font-extrabold text-gray-900">
                     <span className="text-gray-400 text-xl mr-1">M</span>
                     {p.balance.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-2">
+                    タップで復元QR
                   </div>
                 </div>
               ))}
@@ -259,6 +345,14 @@ export default function Bank() {
         </div>
       )}
 
+      {/* Help Modal */}
+      <HelpModal
+        open={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="使い方（銀行）"
+        sections={bankHelpSections}
+      />
+
       {/* Sync Player Modal */}
       {syncPlayer && (
         <QRDisplay
@@ -271,6 +365,7 @@ export default function Bank() {
             seq: getNextSeq(syncPlayer.uuid),
           })}
           title={`${syncPlayer.name} の復元用QR`}
+          description="プレイヤーの端末で「銀行から復元」を選び、このQRを読み取ってもらってください"
           onClose={() => setSyncPlayer(null)}
         />
       )}

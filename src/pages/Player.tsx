@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, History, RefreshCw, X, LogOut } from "lucide-react";
+import { ArrowLeft, History, RefreshCw, X, LogOut, HelpCircle } from "lucide-react";
 import { usePlayerStore } from "../store/playerStore";
 import { Keypad } from "../components/Keypad";
 import { QRDisplay } from "../components/QRDisplay";
 import { QRScanner } from "../components/QRScanner";
+import { HelpModal, type HelpSection } from "../components/HelpModal";
 import { cn } from "../utils/cn";
 import { playAudio } from "../utils/audio";
 import type {
@@ -21,6 +22,124 @@ const COLORS = [
   { name: "Yellow", hex: "#F59E0B" },
   { name: "Purple", hex: "#8B5CF6" },
   { name: "Pink", hex: "#EC4899" },
+];
+
+// --- Help content definitions ---
+
+const registrationHelpSections: HelpSection[] = [
+  {
+    title: "登録のながれ",
+    borderColor: "border-indigo-500",
+    content: (
+      <ol className="list-none space-y-2">
+        <li>
+          <strong>1.</strong> 名前・テーマカラー・初期残高を入力します。
+        </li>
+        <li>
+          <strong>2.</strong>{" "}
+          「登録用QRを表示する」をタップすると、QRコードが画面に出ます。
+        </li>
+        <li>
+          <strong>3.</strong>{" "}
+          そのQRを<strong>銀行端末（親機）のカメラ</strong>
+          にかざして読み取ってもらえば登録完了です。
+        </li>
+      </ol>
+    ),
+  },
+  {
+    title: "以前のデータを復元したい場合",
+    borderColor: "border-amber-500",
+    content: (
+      <p>
+        アプリを閉じてしまった等でデータが消えた場合は、画面下の
+        <strong>「銀行からデータを復元する」</strong>
+        から復元できます。銀行の画面であなたのパネルをタップし、復元用QRを表示してもらってください。
+      </p>
+    ),
+  },
+];
+
+const mainHelpSections: HelpSection[] = [
+  {
+    title: "支払い・受け取り",
+    borderColor: "border-indigo-500",
+    content: (
+      <p>
+        金額を入力して<strong>「支払う」</strong>または
+        <strong>「もらう」</strong>
+        をタップするとQRコードが表示されます。そのQRをテーブル中央の
+        <strong>銀行端末のカメラにかざして</strong>読み取ってもらってください。
+      </p>
+    ),
+  },
+  {
+    title: "プレイヤー間の送金",
+    borderColor: "border-emerald-500",
+    content: (
+      <div className="bg-gray-50 p-3 rounded-xl">
+        <p className="mb-2">直接の送金はできません。次の2ステップで行います：</p>
+        <ol className="list-none space-y-1">
+          <li>
+            <strong>1.</strong> 払う側が「○○M{" "}
+            <strong>支払う</strong>」QRを銀行に読ませる
+          </li>
+          <li>
+            <strong>2.</strong> もらう側が「○○M{" "}
+            <strong>もらう</strong>」QRを銀行に読ませる
+          </li>
+        </ol>
+      </div>
+    ),
+  },
+  {
+    title: "間違えた取引を取り消す",
+    borderColor: "border-rose-500",
+    content: (
+      <p>
+        右上の <History size={14} className="inline -mt-0.5" />{" "}
+        アイコンから履歴を開き、間違えた取引の<strong>「取消」</strong>
+        をタップしてください。取消用QRが出るので、銀行に読み取ってもらえば元に戻ります。
+      </p>
+    ),
+  },
+  {
+    title: "データが消えてしまった時",
+    borderColor: "border-amber-500",
+    content: (
+      <p>
+        誤って画面を閉じるとデータが消え、銀行側とズレてしまいます。その場合は右上の{" "}
+        <RefreshCw size={14} className="inline -mt-0.5" />{" "}
+        アイコンをタップし、銀行の画面であなたのパネルをタップして表示される復元用QRを読み取ってください。
+      </p>
+    ),
+  },
+  {
+    title: "アイコンの意味",
+    borderColor: "border-slate-500",
+    content: (
+      <div className="space-y-3 bg-gray-50 p-3 rounded-xl">
+        <div className="flex items-center">
+          <RefreshCw size={18} className="mr-3 text-indigo-500 shrink-0" />
+          <span>
+            <strong>復元:</strong> 銀行から最新データを読み取って復旧します。
+          </span>
+        </div>
+        <div className="flex items-center">
+          <History size={18} className="mr-3 text-gray-500 shrink-0" />
+          <span>
+            <strong>履歴:</strong> 取引の確認と、間違いの取消ができます。
+          </span>
+        </div>
+        <div className="flex items-center">
+          <LogOut size={18} className="mr-3 text-rose-500 shrink-0" />
+          <span>
+            <strong>リセット:</strong> データを消去して登録画面に戻ります。
+          </span>
+        </div>
+      </div>
+    ),
+  },
 ];
 
 export default function Player() {
@@ -40,6 +159,7 @@ export default function Player() {
   const [qrTitle, setQrTitle] = useState("");
 
   const [showHistory, setShowHistory] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [isScanningSync, setIsScanningSync] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -97,10 +217,6 @@ export default function Player() {
     setQrTitle("登録用QRコード");
   };
 
-  const showRegQR = () => {
-    setIsScanningSync(true);
-  };
-
   const handlePay = (amount: number) => {
     if (!profile) return;
     const { seq, commit, rollback } = addTransaction(-amount);
@@ -156,42 +272,54 @@ export default function Player() {
     setShowHistory(false);
   };
 
-  // ----- Registration View -----
-  if (!profile) {
-    if (isScanningSync) {
-      return (
-        <div className="flex flex-col min-h-screen bg-gray-50 p-6">
-          <header className="flex items-center mb-8">
-            <button
-              onClick={() => setIsScanningSync(false)}
-              className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <ArrowLeft size={24} />
-            </button>
-            <h1 className="text-xl font-bold ml-2">銀行から復元</h1>
-          </header>
-          <div className="flex-1 flex flex-col items-center">
-            <QRScanner onScan={handleScanSync} isScanning={true} />
-            <p className="mt-8 text-sm font-bold text-gray-500 text-center">
-              銀行の画面でプレイヤーパネルをタップし、
-              <br />
-              復元用QRを表示して読み取ってください。
-            </p>
-          </div>
-        </div>
-      );
-    }
-
+  // ----- Sync Scanner View (shared by both registration and main) -----
+  if (isScanningSync) {
     return (
       <div className="flex flex-col min-h-screen bg-gray-50 p-6">
         <header className="flex items-center mb-8">
-          <Link
-            to="/"
+          <button
+            onClick={() => setIsScanningSync(false)}
             className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
           >
             <ArrowLeft size={24} />
-          </Link>
-          <h1 className="text-xl font-bold ml-2">プレイヤー登録</h1>
+          </button>
+          <h1 className="text-xl font-bold ml-2">銀行から復元</h1>
+        </header>
+        <div className="flex-1 flex flex-col items-center">
+          <QRScanner onScan={handleScanSync} isScanning={true} />
+          <p className="mt-8 text-sm font-bold text-gray-500 text-center">
+            銀行の画面であなたのパネルをタップし、
+            <br />
+            表示された復元用QRを読み取ってください。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ----- Registration View -----
+  if (!profile) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50 p-6">
+        <header className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <Link
+              to="/"
+              className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <ArrowLeft size={24} />
+            </Link>
+            <h1 className="text-xl font-bold ml-2 text-gray-800">プレイヤー登録</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowHelp(true)}
+              className="p-2 text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+              title="使い方"
+            >
+              <HelpCircle size={20} />
+            </button>
+          </div>
         </header>
 
         <form onSubmit={handleRegister} className="flex-1 space-y-6">
@@ -246,7 +374,7 @@ export default function Player() {
             type="submit"
             className="w-full mt-8 bg-gray-900 text-white font-bold py-4 rounded-xl shadow hover:bg-gray-800 active:scale-95 transition-all"
           >
-            登録して開始する
+            登録用QRを表示する
           </button>
 
           <div className="relative py-4">
@@ -268,82 +396,97 @@ export default function Player() {
             銀行からデータを復元する
           </button>
         </form>
+
+        {/* QR Code Modal (for registration) */}
+        {qrPayload && (
+          <QRDisplay
+            payload={qrPayload.text}
+            title={qrTitle}
+            description="銀行端末のカメラにかざして読み取ってもらってください"
+            onClose={() => {
+              if (qrPayload.rollback) qrPayload.rollback();
+              if (qrPayload.type === "reg") {
+                reset();
+              }
+              setQrPayload(null);
+            }}
+            onConfirm={() => {
+              if (qrPayload.commit) qrPayload.commit();
+              setQrPayload(null);
+            }}
+          />
+        )}
+
+        {/* Help Modal (registration) */}
+        <HelpModal
+          open={showHelp}
+          onClose={() => setShowHelp(false)}
+          title="登録のしかた"
+          sections={registrationHelpSections}
+        />
       </div>
     );
   }
 
   // ----- Main View -----
-  if (isScanningSync && profile) {
-    return (
-      <div className="flex flex-col min-h-screen bg-gray-50 p-6 z-50 absolute inset-0">
-        <header className="flex items-center mb-8">
-          <button
-            onClick={() => setIsScanningSync(false)}
-            className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <h1 className="text-xl font-bold ml-2">銀行から復元</h1>
-        </header>
-        <div className="flex-1 flex flex-col items-center">
-          <QRScanner onScan={handleScanSync} isScanning={true} />
-          <p className="mt-8 text-sm font-bold text-gray-500 text-center">
-            銀行の画面でプレイヤーパネルをタップし、
-            <br />
-            復元用QRを表示して読み取ってください。
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-screen bg-gray-50 max-h-screen overflow-hidden relative">
-      <header className="flex items-center p-4 bg-white shadow-sm border-b border-gray-100 z-10 shrink-0">
-        <Link
-          to="/"
-          className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </Link>
-        <div className="ml-2 flex items-center flex-1">
-          <div
-            className="w-4 h-4 rounded-full mr-2 shadow-inner"
-            style={{ backgroundColor: profile.color }}
-          />
-          <span className="font-bold text-gray-800 truncate">
-            {profile.name}
-          </span>
+      <header className="flex items-center justify-between p-4 bg-white shadow-sm border-b border-gray-100 z-10 shrink-0">
+        <div className="flex items-center flex-1 min-w-0">
+          <Link
+            to="/"
+            className="p-2 -ml-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors shrink-0"
+          >
+            <ArrowLeft size={24} />
+          </Link>
+          <div className="ml-2 flex items-center min-w-0">
+            <div
+              className="w-4 h-4 rounded-full mr-2 shadow-inner shrink-0"
+              style={{ backgroundColor: profile.color }}
+            />
+            <span className="font-bold text-gray-800 truncate">
+              {profile.name}
+            </span>
+          </div>
         </div>
-        <button
-          onClick={showRegQR}
-          className="p-2 text-indigo-600 bg-indigo-50 rounded-full mr-2 hover:bg-indigo-100 transition-colors"
-          title="銀行からデータを復元"
-        >
-          <RefreshCw size={20} />
-        </button>
-        <button
-          onClick={() => setShowHistory(true)}
-          className="p-2 text-gray-600 bg-gray-100 rounded-full mr-2 hover:bg-gray-200 transition-colors"
-          title="履歴を表示"
-        >
-          <History size={20} />
-        </button>
-        <button
-          onClick={() => {
-            if (
-              window.confirm(
-                "プレイヤーデータをリセットして最初からやり直しますか？",
-              )
-            ) {
-              reset();
-            }
-          }}
-          className="p-2 text-rose-600 bg-rose-50 rounded-full hover:bg-rose-100 transition-colors"
-          title="プレイヤーデータをリセット"
-        >
-          <LogOut size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsScanningSync(true)}
+            className="p-2 text-indigo-600 bg-indigo-50 rounded-full hover:bg-indigo-100 transition-colors"
+            title="銀行からデータを復元"
+          >
+            <RefreshCw size={20} />
+          </button>
+          <button
+            onClick={() => setShowHistory(true)}
+            className="p-2 text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+            title="履歴を表示"
+          >
+            <History size={20} />
+          </button>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="p-2 text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+            title="使い方"
+          >
+            <HelpCircle size={20} />
+          </button>
+          <button
+            onClick={() => {
+              if (
+                window.confirm(
+                  "プレイヤーデータをリセットして最初からやり直しますか？",
+                )
+              ) {
+                reset();
+              }
+            }}
+            className="p-2 text-rose-600 bg-rose-50 rounded-full hover:bg-rose-100 transition-colors"
+            title="リセット"
+          >
+            <LogOut size={20} />
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col pt-4 bg-gray-50 relative min-h-0">
@@ -360,11 +503,20 @@ export default function Player() {
         <Keypad onPay={handlePay} onReceive={handleReceive} />
       </main>
 
+      {/* Help Modal (main view) */}
+      <HelpModal
+        open={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="使い方"
+        sections={mainHelpSections}
+      />
+
       {/* QR Code Modal */}
       {qrPayload && (
         <QRDisplay
           payload={qrPayload.text}
           title={qrTitle}
+          description="銀行端末のカメラにかざして読み取ってもらってください"
           onClose={() => {
             if (qrPayload.rollback) qrPayload.rollback();
             if (qrPayload.type === "reg") {

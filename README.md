@@ -11,6 +11,57 @@ A fully offline, serverless Progressive Web App (PWA) designed to replace physic
 
 **Note:** *This project was generated and developed entirely by an AI assistant via [OpenCode](https://opencode.ai).*
 
+---
+
+## 🎮 How to Play / User Guide
+
+Here is the basic flow for using the app during a game session.
+
+### 1. Preparation (Assigning Roles)
+
+Before starting the game, decide which devices will play which role.
+
+1. **Set up the Bank:** Place one tablet or smartphone in the center of the table and select "Bank" from the app's home screen.
+2. **Set up Players:** Every player opens the app on their own smartphone and selects "Player".
+
+### 2. Joining the Game (Registration)
+
+1. On their smartphones, players input their **Name, Theme Color, and Initial Balance** (usually 1500), then tap "Show Registration QR".
+2. Present the generated QR code to the "Bank" device's camera.
+3. Once the player's name appears on the Bank's screen, tap "Done" on the player's device to enter the main game screen.
+
+### 3. Transactions During the Game
+
+All money transfers are completed by players generating a QR code and having the Bank scan it.
+
+*   **Paying / Receiving from the Bank:**
+    Players enter an amount on their device's keypad and tap "Pay" or "Receive". Present the generated QR code to the Bank's camera.
+*   **Transferring Money Between Players:**
+    Since there is no direct (P2P) communication, this requires two steps:
+    1. The 【Payer】 generates a "Pay [Amount]" QR and the Bank scans it.
+    2. The 【Receiver】 generates a "Receive [Amount]" QR and the Bank scans it.
+
+### 4. Correcting Mistakes (Undo)
+
+If a wrong amount is scanned, it can be easily reverted.
+
+1. Tap the "History" (clock icon) button in the top right corner of the player's screen who made the mistake.
+2. Find the incorrect transaction and tap the "Undo" button to display an Undo QR code.
+3. Have the Bank scan this QR code. The transaction will be rolled back, and the balance will be restored.
+
+### 5. Recovering Lost Data (Crash Recovery)
+
+If a player accidentally closes their browser tab or reloads the page, their local data might be reset. If they simply register again as a new user, the "transaction sequence number (seq)" remembered by the Bank will be out of sync, causing future transactions to fail. 
+
+**In such cases, you must perform a "Recovery":**
+
+1. 【Bank】 On the Bank screen, tap the name panel of the disconnected player.
+2. 【Bank】 A "Recovery QR" for that player will be displayed.
+3. 【Player】 On the player's registration screen, tap the "Restore from Bank" button to activate the camera.
+4. 【Player】 Scan the Recovery QR displayed on the Bank screen. Your balance and transaction sequence (seq) will be fully synchronized, allowing you to return to the game seamlessly.
+
+---
+
 ## 🌟 Overview & The "Offline-First" Architecture
 
 The biggest challenge with existing digital board game banking apps is that they require a shared Wi-Fi network, Bluetooth pairing, or creating accounts on a central web server. 
