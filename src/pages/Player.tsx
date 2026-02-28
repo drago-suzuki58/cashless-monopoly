@@ -365,9 +365,11 @@ export default function Player() {
         <QRDisplay
           payload={qrPayload.text}
           title={qrTitle}
-          isConfirmable={qrPayload.type !== "reg"} // Registration usually isn't strict about history
           onClose={() => {
             if (qrPayload.rollback) qrPayload.rollback();
+            if (qrPayload.type === "reg") {
+              reset();
+            }
             setQrPayload(null);
           }}
           onConfirm={() => {

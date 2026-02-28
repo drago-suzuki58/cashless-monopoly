@@ -6,7 +6,6 @@ interface QRDisplayProps {
   onClose: () => void;
   onConfirm?: () => void;
   title?: string;
-  isConfirmable?: boolean;
 }
 
 export function QRDisplay({
@@ -14,7 +13,6 @@ export function QRDisplay({
   onClose,
   onConfirm,
   title = "銀行にかざしてください",
-  isConfirmable = true,
 }: QRDisplayProps) {
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-in fade-in zoom-in duration-200">
@@ -39,37 +37,32 @@ export function QRDisplay({
               includeMargin={false}
             />
           </div>
+          
+          <p className="text-gray-500 text-sm font-medium text-center mt-2 leading-relaxed">
+            銀行端末で読み取ってもらった後、<br />
+            完了ボタンを押してください
+          </p>
         </div>
 
-        {isConfirmable ? (
-          <div className="p-4 bg-gray-50 border-t border-gray-100 grid grid-cols-2 gap-3 shrink-0">
-            <button
-              onClick={onClose}
-              className="flex items-center justify-center py-4 rounded-xl font-bold text-gray-700 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-95 transition-all"
-            >
-              <X size={20} className="mr-2" />
-              キャンセル
-            </button>
-            <button
-              onClick={() => {
-                if (onConfirm) onConfirm();
-                else onClose(); // Fallback if onConfirm is not provided
-              }}
-              className="flex items-center justify-center py-4 rounded-xl font-bold text-white bg-indigo-600 shadow-sm hover:bg-indigo-700 active:scale-95 transition-all"
-            >
-              <Check size={20} className="mr-2" />
-              読取完了
-            </button>
-          </div>
-        ) : (
-          <div className="p-6 pt-0 text-center">
-            <p className="text-gray-500 text-sm">
-              読み取られると自動的に
-              <br />
-              画面が閉じます（未実装の場合は×で閉じてください）
-            </p>
-          </div>
-        )}
+        <div className="p-4 bg-gray-50 border-t border-gray-100 grid grid-cols-2 gap-3 shrink-0">
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center py-4 rounded-xl font-bold text-gray-700 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-95 transition-all"
+          >
+            <X size={20} className="mr-2" />
+            キャンセル
+          </button>
+          <button
+            onClick={() => {
+              if (onConfirm) onConfirm();
+              else onClose(); // Fallback if onConfirm is not provided
+            }}
+            className="flex items-center justify-center py-4 rounded-xl font-bold text-white bg-indigo-600 shadow-sm hover:bg-indigo-700 active:scale-95 transition-all"
+          >
+            <Check size={20} className="mr-2" />
+            読取完了
+          </button>
+        </div>
       </div>
     </div>
   );
