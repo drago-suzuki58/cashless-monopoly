@@ -93,11 +93,18 @@ export const usePlayerStore = create<PlayerState>()(
         return {
           seq,
           commit: () => {
+            // Find the target transaction to derive the reversed amount
+            const targetLog = get().history.find((h) => h.seq === targetSeq);
+            const reversedAmount = targetLog?.amount !== undefined
+              ? -targetLog.amount
+              : undefined;
+
             const log: PlayerLog = {
               seq,
               timestamp: Date.now(),
               type: "undo",
               targetSeq,
+              amount: reversedAmount,
             };
             set((state) => ({
               history: [

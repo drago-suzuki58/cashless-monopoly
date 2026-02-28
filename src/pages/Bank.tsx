@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Trash2, History, X, HelpCircle } from "lucide-react";
 import { useBankStore, type BankPlayer } from "../store/bankStore";
@@ -143,6 +143,17 @@ export default function Bank() {
     }
   }, [toast]);
 
+  // Precompute the set of undone transaction IDs for the history overlay
+  const undoneTxIds = useMemo(
+    () =>
+      new Set(
+        history
+          .filter((h) => h.type === "undo")
+          .map((h) => `${h.playerId}-${h.targetSeq}`),
+      ),
+    [history],
+  );
+
   return (
     <div className="flex flex-col h-screen bg-gray-100 max-h-screen overflow-hidden">
       <header className="flex items-center justify-between p-4 bg-white shadow-sm shrink-0 z-10">
@@ -276,11 +287,8 @@ export default function Bank() {
               <p className="text-center text-gray-400 mt-10">
                 履歴がありません
               </p>
-            ) : (() => {
-              const undoneTxIds = new Set(
-                history.filter((h) => h.type === "undo").map((h) => `${h.playerId}-${h.targetSeq}`)
-              );
-              return history.map((log) => {
+            ) : (
+              history.map((log) => {
                 const seq = log.id.split('-').pop();
                 const isUndone = log.type === "tx" && undoneTxIds.has(log.id);
                 return (
@@ -339,8 +347,8 @@ export default function Bank() {
                     </div>
                   </div>
                 );
-              });
-            })()}
+              })
+            )}
           </div>
         </div>
       )}

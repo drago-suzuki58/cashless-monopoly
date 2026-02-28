@@ -1,9 +1,26 @@
-export const playAudio = (type: 'success' | 'error') => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-  if (!AudioContextClass) return; // Browser doesn't support it
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
 
-  const ctx = new AudioContextClass();
+// Reuse a single AudioContext across all calls to avoid hitting browser limits
+let _ctx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  if (!AudioContextClass) return null;
+  if (!_ctx || _ctx.state === "closed") {
+    _ctx = new AudioContextClass();
+  }
+  return _ctx;
+}
+
+export const playAudio = (type: 'success' | 'error') => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  // Resume context if it was suspended (e.g. browser autoplay policy)
+  if (ctx.state === "suspended") {
+    ctx.resume();
+  }
+
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
 

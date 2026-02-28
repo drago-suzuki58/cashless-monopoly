@@ -32,7 +32,7 @@ export interface UndoPayload extends BasePayload {
   seq: number; // current sequence number
 }
 
-export type Payload = RegisterPayload | TransactionPayload | UndoPayload;
+export type Payload = RegisterPayload | TransactionPayload | UndoPayload | SyncPayload;
 
 // Log type for Bank
 export interface BankLog {
